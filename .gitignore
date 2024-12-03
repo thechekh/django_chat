@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env
+.env/
+.venv/
+venv/
+env/
+
+# Testing
+.pytest_cache/
+*.pytest_cache
+.cache/
+
+# Coverage
+.coverage
+.coverage.*
+
+# IDE/Editor files
+.vscode/
+.idea/
+
+# Migrations cache
+migrations/**/__pycache__/
+migrations/**/*.pyc
