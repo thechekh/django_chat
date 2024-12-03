@@ -26,7 +26,7 @@ Endpoints are available for CRUD operations on articles (GET, POST, DELETE, PUT)
   - [Build and run the Application](#build-and-run-the-application)
   - [Load Initial Data](#load-initial-data)
   - [Run the Tests](#run-the-tests)
-  - [CI/CD Setup](#ci-cd-setup)
+  - [Continuous Integration and Deployment](#continuous-integration-and-deployment)
 - [Deployment](#deployment)
 
 
@@ -267,7 +267,7 @@ sudo docker-compose exec flask_app poetry run python -m scripts.create_user --us
 
 ![VM](utils/readme_files/i10_vm_create_user.png)
 
-## Run Tests
+## Run the Tests
 Run tests in container:
 ```bash
 sudo docker-compose exec flask_app poetry run pytest
@@ -333,7 +333,9 @@ Coverage of project
 ![Coverage](utils/readme_files/i3_coverage.png)
 
 This will add initial users, roles, and articles to your database.
-## CI/CD Setup
+<a name="ci-cd-setup"></a>
+## Continuous Integration and Deployment
+
 Project has settings for GitHub actions to run tests for every commit.
 
 Github Actions file path:
