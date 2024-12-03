@@ -223,7 +223,7 @@ sudo docker-compose up --build -d
 ```
 ![VM](utils/readme_files/i4_built_in_vm.png)
 
-Now app is available on address <EC2_PUBLIC_IP>:5000/
+Now app is available on address EC2_PUBLIC_IP:5000/
 
 Initiate migrations:
 ```bash
@@ -239,11 +239,15 @@ sudo docker-compose exec flask_app poetry run python -m scripts.populate_db
 ```
 ![VM](utils/readme_files/i6_vm_populate.png)
 Users in database
+
 ![VM](utils/readme_files/i7_populate_users.png)
 Articles in database
-![VM](utils/readme_files/i8_populate_articles.png)
-Now app is available on address <EC2-PUBLIC-IP>:5000/
 
+![VM](utils/readme_files/i8_populate_articles.png)
+
+Now app is available on address EC2-PUBLIC-IP:5000/
+
+To create user use docker-compose command:
 ```bash
 sudo docker-compose exec flask_app poetry run python -m scripts.create_user --username <username> --password <password> --role <role>
 ```
@@ -306,7 +310,7 @@ Restart Nginx: After saving the configuration file, restart Nginx to apply the c
 ```bash
 sudo systemctl restart nginx
 ```
-Now app is also available on address <EC2_PUBLIC_IP>/apidocs
+Now app is also available on address EC2_PUBLIC_IP/apidocs
 
 ### Run the Tests
 
@@ -329,7 +333,7 @@ Coverage of project
 ![Coverage](utils/readme_files/i3_coverage.png)
 
 This will add initial users, roles, and articles to your database.
-## Setup CI/CD
+## CI/CD Setup
 Project has settings for GitHub actions to run tests for every commit.
 
 Github Actions file path:
