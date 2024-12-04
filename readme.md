@@ -334,7 +334,6 @@ Coverage of project
 
 ![Coverage](utils/readme_files/i3_coverage.png)
 
-This will add initial users, roles, and articles to your database.
 <a name="ci-cd-setup"></a>
 ## Continuous Integration and Deployment
 
