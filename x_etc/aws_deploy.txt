@@ -8,5 +8,12 @@ sudo systemctl enable docker
 sudo apt install -y docker-compose
 
 sudo usermod -aG docker ubuntu
-git clone https://gitlab.com/your-repo.git
-cd your-repo
+
+scp -i /home/chekh/Desktop/task_1.pem /home/chekh/.ssh/id_ed25519 ubuntu@34.228.168.218:/home/ubuntu/.ssh/id_ed25519
+ssh -i /home/chekh/Desktop/task_1.pem ubuntu@34.228.168.218
+chmod 600 ~/.ssh/id_ed25519
+
+git clone git@gitlab.chisw.us:danylo.chekh/task_1.git
+cd task_1
+
+create env file
