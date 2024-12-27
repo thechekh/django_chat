@@ -18,8 +18,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: flask_app
-    expose:
-      - "5000"  # Flask app runs on port 5000, but not exposed to the host
+    ports:
+      - "5000:5000"
     env_file:
       - .env
     environment:
@@ -31,11 +31,11 @@ services:
     image: nginx:latest
     container_name: flask_nginx
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro  # Mount nginx configuration file
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
-      - "80:80"  # Expose Nginx on port 80
+      - "80:80"
     depends_on:
-      - flask_app  # Ensure Nginx waits for Flask app to be ready
+      - flask_app
 
 volumes:
   db_data:
