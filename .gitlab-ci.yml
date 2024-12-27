@@ -8,24 +8,27 @@ lint:
   image: python:3.10-slim
   before_script:
     - pip install --upgrade pip
-    - pip install ruff  # or flake8 or pylint
+    - pip install ruff  # You can replace this with flake8 or pylint if desired
   script:
-    - ruff check .  # You can use flake8 or pylint instead
+    - ruff check .  # You can use flake8 or pylint instead of ruff
 
 # Deploy to AWS EC2
 deploy:
   stage: deploy
   image: python:3.10-slim
   before_script:
+    # Install necessary dependencies
     - apt-get update && apt-get install -y openssh-client git
+    # Set up SSH keys for GitLab
     - mkdir -p ~/.ssh
     - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
     - chmod 600 ~/.ssh/id_ed25519
+    # Add the EC2 instance to known hosts to avoid SSH warnings
     - ssh-keyscan -t rsa 34.228.168.218 >> ~/.ssh/known_hosts
   script:
-    - git clone git@gitlab.chisw.us:danylo.chekh/task_1.git
-    - cd task_1
-    - # Add deployment commands here, e.g., pull latest code, install dependencies, restart app
-    - ssh -i /path/to/your/task_1.pem ubuntu@34.228.168.218 "cd ~/task_1 && git pull && docker-compose up -d"
+    - |
+      git clone git@gitlab.chisw.us:danylo.chekh/task_1.git
+      cd task_1
+      ssh -i /path/to/your/task_1.pem ubuntu@34.228.168.218 "cd ~/task_1 && git pull && docker-compose up -d"
   only:
     - master
