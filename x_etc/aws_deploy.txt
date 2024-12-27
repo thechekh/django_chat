@@ -17,3 +17,5 @@ git clone git@gitlab.chisw.us:danylo.chekh/task_1.git
 cd task_1
 
 create env file
+
+test
