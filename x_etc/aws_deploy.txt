@@ -1,0 +1,12 @@
+ssh -i /home/chekh/Desktop/task_1.pem ubuntu@34.228.168.218
+
+sudo apt update
+sudo apt install -y docker.io
+sudo systemctl start docker
+sudo systemctl enable docker
+
+sudo apt install -y docker-compose
+
+sudo usermod -aG docker ubuntu
+git clone https://gitlab.com/your-repo.git
+cd your-repo
