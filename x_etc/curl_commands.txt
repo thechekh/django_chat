@@ -1,2 +1,0 @@
-curl -X GET http://localhost/articles
-curl -X GET http://localhost/articles -H "Authorization: Bearer <YourTokenHere>"

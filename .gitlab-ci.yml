@@ -1,9 +1,0 @@
-stages:
-  - print
-
-print_message:
-  stage: print
-  script:
-    - echo "Waiting for 5 seconds..."
-    - sleep 5
-    - echo "Hello, GitLab CI/CD!"
