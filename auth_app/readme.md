@@ -53,6 +53,7 @@ Create django admin user:
 ```bash
 docker-compose exec web python manage.py createsuperuser
 ```
+![docker](readme_images/docker.png)
 Start working with matrix local server (Not related to task 2):
 ![element](readme_images/u8_local_server_element.png)
 ![matrixapi](readme_images/u9_local_matrix_rooms.png)
