@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if user.userprofile.avatar %}
+                    <img src="{{ user.userprofile.avatar.url }}" class="rounded-circle mb-3"
+                        style="width: 150px; height: 150px; object-fit: cover;">
+                    {% else %}
+                    <img src="{% static 'avatars/image_placeholder.png' %}" class="rounded-circle mb-3"
+                        style="width: 150px; height: 150px; object-fit: cover;">
+                    {% endif %}
+                    <h3>{{ user.username }}</h3>
+                    <p class="text-muted">{{ user.userprofile.location }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h4>Edit Profile</h4>
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ user_form|crispy }}
+                        {{ profile_form|crispy }}
+                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                        <a href="{% url 'matrix_dashboard' %}" class="btn btn-info">Matrix Dashboard</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

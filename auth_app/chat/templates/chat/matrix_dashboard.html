@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Matrix Dashboard</h1>
+
+<h2>Rooms</h2>
+<ul>
+    {% for room in rooms %}
+    <li>{{ room }}</li>
+    {% endfor %}
+</ul>
+
+<h2>Public Rooms</h2>
+<ul>
+    {% for room in public_rooms %}
+    <li>Room name: {{ room.name }}, Room ID: {{ room.room_id }}</li>
+    {% endfor %}
+</ul>
+
+
+<h2>Messages</h2>
+{% for room_id, messages in room_messages.items %}
+<h3>Messages in Room: {{ room_id }}</h3>
+<ul>
+    {% for message in messages %}
+    <li>{{ message.body }}</li>
+    {% endfor %}
+</ul>
+{% endfor %}
+
+{% endblock %}
