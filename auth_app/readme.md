@@ -29,7 +29,8 @@ oauth-apps/differences-between-github-apps-and-oauth-apps
 ![email](readme_images/u3_email_registration_1.png)
 
 ![email](readme_images/u4_email_registration_2.png)
-
+<br>
+<br>
 **Login**:
 
 ![login](readme_images/u5_login.gif)
