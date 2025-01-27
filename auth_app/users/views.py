@@ -1,76 +1,76 @@
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import login
-from django.contrib.auth import authenticate
+from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
 
-from .forms import UserRegistrationForm, UserUpdateForm, UserProfileForm
+from .serializers import UserRegistrationSerializer, UserProfileSerializer
+from .models import UserProfile, BlacklistedToken
 from .tasks import send_registration_email
-from .models import UserProfile
 
 
-def signup(request):
-    if request.method == "POST":
-        user_form = UserRegistrationForm(request.POST)
-        profile_form = UserProfileForm(request.POST, request.FILES)
-
-        if user_form.is_valid() and profile_form.is_valid():
-            user = user_form.save()
-            profile = profile_form.save(commit=False)
-            profile.user = user
-            profile.save()
-
-            user = authenticate(
-                username=user.username, password=request.POST["password1"]
-            )
-            if user is not None:
-                login(
-                    request,
-                    user,
-                    backend="django.contrib.auth.backends.ModelBackend",
-                )
-
+class UserRegistrationView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = UserRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
             send_registration_email.delay(user.email)
-
-            messages.success(
-                request,
-                "Account created successfully! Please check your email.",
+            return Response(
+                {
+                    "accessToken": access_token,
+                    "refreshToken": refresh_token,
+                },
+                status=status.HTTP_201_CREATED,
             )
-            return redirect("profile")
-    else:
-        user_form = UserRegistrationForm()
-        profile_form = UserProfileForm()
-
-    return render(
-        request,
-        "users/signup.html",
-        {"user_form": user_form, "profile_form": profile_form},
-    )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@login_required
-def profile(request):
-    user_profile, created = UserProfile.objects.get_or_create(
-        user=request.user
-    )
-
-    if request.method == "POST":
-        user_form = UserUpdateForm(request.POST, instance=request.user)
-        profile_form = UserProfileForm(
-            request.POST, request.FILES, instance=user_profile
+@api_view(["GET", "PUT"])
+@permission_classes([IsAuthenticated])
+def user_profile_view(request):
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+        if request.method == "GET":
+            serializer = UserProfileSerializer(profile)
+            return Response(serializer.data)
+        elif request.method == "PUT":
+            serializer = UserProfileSerializer(profile, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({"message": "Profile updated successfully"})
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
+    except UserProfile.DoesNotExist:
+        return Response(
+            {"error": "Profile not found."},
+            status=status.HTTP_404_NOT_FOUND,
         )
 
-        if user_form.is_valid() and profile_form.is_valid():
-            user_form.save()
-            profile_form.save()
-            messages.success(request, "Your profile has been updated!")
-            return redirect("profile")
-    else:
-        user_form = UserUpdateForm(instance=request.user)
-        profile_form = UserProfileForm(instance=user_profile)
 
-    return render(
-        request,
-        "users/profile.html",
-        {"user_form": user_form, "profile_form": profile_form},
-    )
+@api_view(["POST"])
+def logout_view(request):
+    try:
+        refresh_token = request.data.get("refreshToken")
+        if not refresh_token:
+            return Response(
+                {"error": "Refresh token is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        token = RefreshToken(refresh_token)
+        token.blacklist()
+
+        BlacklistedToken.objects.create(token=refresh_token)
+
+        return Response(
+            {"message": "Logout successful"}, status=status.HTTP_200_OK
+        )
+    except TokenError as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

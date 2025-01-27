@@ -1,45 +1,25 @@
 from django.urls import path
-from django.contrib.auth import views as auth_views
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenBlacklistView,
+)
 
-from . import views
+from .views import UserRegistrationView, user_profile_view, logout_view
 
 urlpatterns = [
     path(
-        "",
-        auth_views.LoginView.as_view(template_name="users/login.html"),
-        name="login",
-    ),
-    path("signup/", views.signup, name="signup"),
-    path("profile/", views.profile, name="profile"),
-    path(
-        "logout/", auth_views.LogoutView.as_view(next_page="/"), name="logout"
+        "api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"
     ),
     path(
-        "password-reset/",
-        auth_views.PasswordResetView.as_view(
-            template_name="users/password_reset.html"
-        ),
-        name="password_reset",
+        "api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"
     ),
     path(
-        "password-reset/done/",
-        auth_views.PasswordResetDoneView.as_view(
-            template_name="users/password_reset_done.html"
-        ),
-        name="password_reset_done",
+        "api/token/blacklist/",
+        TokenBlacklistView.as_view(),
+        name="token_blacklist",
     ),
-    path(
-        "password-reset-confirm/<uidb64>/<token>/",
-        auth_views.PasswordResetConfirmView.as_view(
-            template_name="users/password_reset_confirm.html"
-        ),
-        name="password_reset_confirm",
-    ),
-    path(
-        "password-reset-complete/",
-        auth_views.PasswordResetCompleteView.as_view(
-            template_name="users/password_reset_complete.html"
-        ),
-        name="password_reset_complete",
-    ),
+    path("api/register/", UserRegistrationView.as_view(), name="register"),
+    path("api/profile/", user_profile_view, name="profile"),
+    path("api/logout/", logout_view, name="logout"),
 ]
