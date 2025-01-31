@@ -37,6 +37,9 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 60 * 60
 
 INSTALLED_APPS = [
+    "daphne",
+    "channels",
+    "chat",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -47,7 +50,22 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
 ]
+WSGI_APPLICATION = "auth_app.wsgi.application"
+ASGI_APPLICATION = "auth_app.asgi.application"
 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Vite's default port
+]
+
+CORS_ALLOW_CREDENTIALS = True
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
 
 # Email settings
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -115,8 +133,6 @@ TEMPLATES = [
         },
     },
 ]
-
-WSGI_APPLICATION = "auth_app.wsgi.application"
 
 
 # Database
