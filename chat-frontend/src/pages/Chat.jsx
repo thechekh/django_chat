@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const API_BASE_URL = "http://127.0.0.1:8000/api";
+
 const Chat = () => {
     const navigate = useNavigate();
     const [rooms, setRooms] = useState([]);
-    const [currentRoom, setCurrentRoom] = useState(null);
+    const [currentRoom, setCurrentRoom] = useState(null); // room object with id and name
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [newRoomName, setNewRoomName] = useState('');
@@ -16,11 +18,15 @@ const Chat = () => {
             navigate('/login');
             return;
         }
+        fetchRooms();
     }, [navigate]);
 
     useEffect(() => {
         if (currentRoom) {
-            connectToRoom(currentRoom);
+            // Open WebSocket connection using room name
+            connectToRoom(currentRoom.name);
+            // Also fetch past messages using room id
+            fetchMessages(currentRoom.id);
         }
         return () => {
             if (wsRef.current) {
@@ -28,6 +34,50 @@ const Chat = () => {
             }
         };
     }, [currentRoom]);
+
+    const fetchRooms = async () => {
+        const token = sessionStorage.getItem('accessToken');
+        try {
+            const response = await fetch(`${API_BASE_URL}/rooms/`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setRooms(data);
+            } else {
+                console.error('Failed to fetch rooms');
+            }
+        } catch (error) {
+            console.error("Error fetching rooms:", error);
+        }
+    };
+
+    const fetchMessages = async (roomId) => {
+        const token = sessionStorage.getItem('accessToken');
+        try {
+            const response = await fetch(`${API_BASE_URL}/messages/?room=${roomId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                // map API messages to fit our display format: use content field and username from serializer
+                const formatted = data.map(item => ({
+                    ...item,
+                    message: item.content,
+                    user: item.username || item.user
+                }));
+                setMessages(formatted);
+            } else {
+                console.error('Failed to fetch messages');
+            }
+        } catch (error) {
+            console.error("Error fetching messages:", error);
+        }
+    };
 
     const connectToRoom = (roomName) => {
         const token = sessionStorage.getItem('accessToken');
@@ -49,15 +99,33 @@ const Chat = () => {
         wsRef.current = ws;
     };
 
-    const handleCreateRoom = () => {
+    const handleCreateRoom = async () => {
         if (newRoomName.trim()) {
-            setRooms(prev => [...prev, newRoomName]);
-            setNewRoomName('');
+            const token = sessionStorage.getItem('accessToken');
+            try {
+                const response = await fetch(`${API_BASE_URL}/rooms/`, {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ name: newRoomName })
+                });
+                if (response.ok) {
+                    const newRoom = await response.json();
+                    setRooms(prev => [...prev, newRoom]);
+                    setNewRoomName('');
+                } else {
+                    console.error("Failed to create room");
+                }
+            } catch (error) {
+                console.error("Error creating room:", error);
+            }
         }
     };
 
-    const handleJoinRoom = (roomName) => {
-        setCurrentRoom(roomName);
+    const handleJoinRoom = (room) => {
+        setCurrentRoom(room);
         setMessages([]);
     };
 
@@ -65,7 +133,7 @@ const Chat = () => {
         if (newMessage.trim() && wsRef.current) {
             wsRef.current.send(JSON.stringify({
                 message: newMessage,
-                room: currentRoom
+                room: currentRoom.name
             }));
             setNewMessage('');
         }
@@ -99,11 +167,11 @@ const Chat = () => {
                             <div className="list-group">
                                 {rooms.map((room) => (
                                     <button
-                                        key={room}
-                                        className={`list-group-item list-group-item-action ${currentRoom === room ? 'active' : ''}`}
+                                        key={room.id}
+                                        className={`list-group-item list-group-item-action ${currentRoom && currentRoom.id === room.id ? 'active' : ''}`}
                                         onClick={() => handleJoinRoom(room)}
                                     >
-                                        {room}
+                                        {room.name}
                                     </button>
                                 ))}
                             </div>
@@ -115,7 +183,7 @@ const Chat = () => {
                 <div className="col-md-9">
                     <div className="card">
                         <div className="card-header">
-                            <h5 className="mb-0">{currentRoom || 'Select a room'}</h5>
+                            <h5 className="mb-0">{currentRoom ? currentRoom.name : 'Select a room'}</h5>
                         </div>
                         <div className="card-body" style={{ height: '500px', overflowY: 'auto' }}>
                             {messages.map((msg, index) => (
