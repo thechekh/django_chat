@@ -23,12 +23,18 @@ const SignUp = () => {
 
     const handleSubmit = async () => {
         try {
-            const response = await fetch('http://localhost:8000/api/register/', {
+            // Convert 'age' to a number before sending
+            const submissionData = { 
+                ...formData, 
+                age: parseInt(formData.age, 10) 
+            };
+
+            const response = await fetch('http://127.0.0.1:8000/api/register/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(submissionData),
             });
 
             const data = await response.json();

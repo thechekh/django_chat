@@ -5,8 +5,15 @@ from .models import Room, Message
 class RoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
-        fields = ["id", "name", "created_at", "users_amount", "created_by"]
-        read_only_fields = ["created_by", "users_amount"]
+        fields = [
+            "id",
+            "name",
+            "created_at",
+            "users_amount",
+            "created_by",
+            "joined_users",
+        ]
+        read_only_fields = ["created_by", "users_amount", "joined_users"]
 
 
 class MessageSerializer(serializers.ModelSerializer):

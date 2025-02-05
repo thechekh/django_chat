@@ -5,7 +5,7 @@ from .models import UserProfile, User
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
-    age = serializers.IntegerField(required=True)
+    age = serializers.IntegerField(required=False, allow_null=True)
     location = serializers.CharField(required=False, allow_blank=True)
     interests = serializers.CharField(required=False, allow_blank=True)
 
@@ -31,7 +31,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         user.save()
 
         UserProfile.objects.get_or_create(
-            user=user, defaults={"age": age, "location": location, "interests": interests}
+            user=user,
+            defaults={
+                "age": age,
+                "location": location,
+                "interests": interests,
+            },
         )
 
         return user

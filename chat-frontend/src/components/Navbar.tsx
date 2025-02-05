@@ -2,9 +2,9 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const API_BASE_URL = "http://127.0.0.1:8000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
-const Navbar = () => {
+const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated, setIsAuthenticated } = useAuth();
 
@@ -48,10 +48,7 @@ const Navbar = () => {
                 <Link className="nav-link" to="/profile">Profile</Link>
               </li>
               <li className="nav-item">
-                <button
-                  className="nav-link btn btn-link"
-                  onClick={handleLogout}
-                >
+                <button className="nav-link btn btn-link" onClick={handleLogout}>
                   Logout
                 </button>
               </li>

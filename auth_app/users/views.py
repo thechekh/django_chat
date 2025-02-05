@@ -8,7 +8,6 @@ from rest_framework_simplejwt.exceptions import TokenError
 
 from .serializers import UserRegistrationSerializer, UserProfileSerializer
 from .models import UserProfile, BlacklistedToken
-from .tasks import send_registration_email
 
 
 class UserRegistrationView(APIView):
@@ -19,7 +18,6 @@ class UserRegistrationView(APIView):
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
-            send_registration_email.delay(user.email)
             return Response(
                 {
                     "accessToken": access_token,

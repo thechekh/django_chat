@@ -56,7 +56,7 @@ ASGI_APPLICATION = "auth_app.asgi.application"
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Vite's default port
 ]
-
+CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]
 CORS_ALLOW_CREDENTIALS = True
 CHANNEL_LAYERS = {
     "default": {
