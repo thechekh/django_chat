@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const Home = () => {
+const Home: React.FC = () => {
     return (
         <div className="container mt-5 text-center">
             <h1>Django Auth App with DRF</h1>

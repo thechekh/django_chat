@@ -1,32 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, ChangeEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const SignUp = () => {
+interface SignUpFormData {
+    username: string;
+    email: string;
+    password: string;
+    age: number;
+    location: string;
+    interests: string;
+}
+
+const SignUp: React.FC = () => {
     const navigate = useNavigate();
     const { setIsAuthenticated } = useAuth();
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<SignUpFormData>({
         username: '',
         email: '',
         password: '',
-        age: '',
+        age: 0,
         location: '',
-        interests: ''
+        interests: '',
     });
 
-    const handleChange = (e) => {
+    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value
+            [e.target.name]: e.target.value,
         });
     };
 
     const handleSubmit = async () => {
         try {
-            // Convert 'age' to a number before sending
-            const submissionData = { 
-                ...formData, 
-                age: parseInt(formData.age, 10) 
+            const submissionData = {
+                ...formData,
             };
 
             const response = await fetch('http://127.0.0.1:8000/api/register/', {
@@ -38,7 +45,6 @@ const SignUp = () => {
             });
 
             const data = await response.json();
-
             if (!response.ok) {
                 throw new Error(data.error || 'Unknown error');
             }

@@ -47,6 +47,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 "user": self.scope["user"].username,
             },
         )
+        # Send notifications to other users in the room.
+        user_ids = await self.get_other_user_ids()
+        for uid in user_ids:
+            await self.channel_layer.group_send(
+                f"notifications_{uid}",
+                {
+                    "type": "notify",
+                    "message": message,
+                    "room": self.room_name,
+                    "sender": self.scope["user"].username,
+                },
+            )
 
     async def chat_message(self, event):
         await self.send(
@@ -57,7 +69,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_or_create_room(self):
-        room, created = Room.objects.get_or_create(name=self.room_name, defaults={'created_by': self.scope["user"]})
+        room, created = Room.objects.get_or_create(
+            name=self.room_name, defaults={"created_by": self.scope["user"]}
+        )
         return room
 
     @database_sync_to_async
@@ -71,4 +85,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         room = Room.objects.get(name=self.room_name)
         Message.objects.create(
             room=room, user=self.scope["user"], content=content
+        )
+
+    @database_sync_to_async
+    def get_other_user_ids(self):
+        room = Room.objects.get(name=self.room_name)
+        # Assume joined_users is a ManyToManyField on Room;
+        # Exclude the sender.
+        return list(
+            room.joined_users.exclude(id=self.scope["user"].id).values_list(
+                "id", flat=True
+            )
         )

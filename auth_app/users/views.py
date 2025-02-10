@@ -9,7 +9,13 @@ from rest_framework_simplejwt.exceptions import TokenError
 from .serializers import UserRegistrationSerializer, UserProfileSerializer
 from .models import UserProfile, BlacklistedToken
 
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import CustomTokenObtainPairSerializer
 
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
+# ...existing code...
 class UserRegistrationView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = UserRegistrationSerializer(data=request.data)

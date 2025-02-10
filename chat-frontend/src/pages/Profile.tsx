@@ -1,19 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const Profile = () => {
+interface ProfileFields {
+    location: string;
+    age: string;
+    interests: string;
+}
+
+interface UserData extends ProfileFields {
+    username: string;
+}
+
+const Profile: React.FC = () => {
     const navigate = useNavigate();
-    const [userData, setUserData] = useState({
-        username: '',
+    const defaultProfileFields: ProfileFields = {
         location: '',
         age: '',
         interests: ''
+    };
+
+    const [userData, setUserData] = useState<UserData>({
+        username: '',
+        ...defaultProfileFields
     });
 
-    const [formData, setFormData] = useState({
-        location: '',
-        age: '',
-        interests: ''
+    const [formData, setFormData] = useState<ProfileFields>({
+        ...defaultProfileFields
     });
 
     useEffect(() => {
@@ -52,7 +64,7 @@ const Profile = () => {
         }
     };
 
-    const handleChange = (e) => {
+    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setFormData({
             ...formData,
             [e.target.name]: e.target.value

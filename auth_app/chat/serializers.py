@@ -18,8 +18,17 @@ class RoomSerializer(serializers.ModelSerializer):
 
 class MessageSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source="user.username", read_only=True)
+    reactions = serializers.JSONField(read_only=True)
 
     class Meta:
         model = Message
-        fields = ["id", "room", "user", "username", "content", "timestamp"]
-        read_only_fields = ["user"]
+        fields = [
+            "id",
+            "room",
+            "user",
+            "username",
+            "content",
+            "timestamp",
+            "reactions",
+        ]
+        read_only_fields = ["user", "reactions"]

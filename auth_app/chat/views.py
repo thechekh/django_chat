@@ -47,6 +47,9 @@ class MessageViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        # For detail actions we ignore the room filter.
+        if self.action in ['retrieve', 'update', 'partial_update', 'destroy', 'react', 'add_reaction']:
+            return Message.objects.all()
         room_id = self.request.query_params.get("room", None)
         return (
             Message.objects.filter(room_id=room_id)
@@ -56,3 +59,25 @@ class MessageViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    @action(detail=True, methods=["post"], url_path="react")
+    def add_reaction(self, request, pk=None):
+        message = self.get_object()
+        reaction = request.data.get("reaction")
+        allowed = ["❤️", "😂", "😮", "😢", "👍"]
+        if reaction not in allowed:
+            return Response(
+                {"error": "Invalid reaction"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        current_reactions = message.reactions or {}
+        current_reactions[reaction] = current_reactions.get(reaction, 0) + 1
+        message.reactions = current_reactions
+        message.save()
+        return Response(
+            {
+                "message": "Reaction added successfully",
+                "reactions": message.reactions,
+            },
+            status=status.HTTP_200_OK,
+        )

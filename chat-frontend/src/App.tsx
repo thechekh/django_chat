@@ -8,7 +8,8 @@ import Profile from './pages/Profile';
 import SignUp from './pages/SignUp';
 import Chat from './pages/Chat';
 import './styles.css';
-const App = () => {
+
+const App: React.FC = () => {
   return (
     <AuthProvider>
       <Router>

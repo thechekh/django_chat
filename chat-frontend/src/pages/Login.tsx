@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const Login = () => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+const Login: React.FC = () => {
+    const [username, setUsername] = useState < string > ('');
+    const [password, setPassword] = useState < string > ('');
     const navigate = useNavigate();
     const { setIsAuthenticated } = useAuth();
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         try {
             const response = await fetch('http://127.0.0.1:8000/api/token/', {
@@ -30,6 +30,14 @@ const Login = () => {
         }
     };
 
+    const handleUsernameChange = (e: ChangeEvent<HTMLInputElement>) => {
+        setUsername(e.target.value);
+    };
+
+    const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
+        setPassword(e.target.value);
+    };
+
     return (
         <div className="container mt-5">
             <h2 className="text-center">Login</h2>
@@ -42,7 +50,7 @@ const Login = () => {
                         className="form-control"
                         required
                         value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        onChange={handleUsernameChange}
                     />
                 </div>
                 <div className="mb-3">
@@ -53,7 +61,7 @@ const Login = () => {
                         className="form-control"
                         required
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={handlePasswordChange}
                     />
                 </div>
                 <button type="submit" className="btn btn-primary w-100">Login</button>
