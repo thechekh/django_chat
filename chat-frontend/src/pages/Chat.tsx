@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import RoomSidebar from '../components/chat/RoomSidebar';
 import ChatWindow from '../components/chat/ChatWindow';
 import Notification from '../components/chat/Notification';
+import { getCurrentUsername } from '../utils/auth';
 
 export interface Room {
   id: number;
@@ -20,6 +21,7 @@ export interface Message {
   message: string;
   timestamp: string;
   reactions?: { [key: string]: number };
+  read_by?: string[];
 }
 
 const API_BASE_URL = "http://127.0.0.1:8000/api";
@@ -134,6 +136,8 @@ const Chat: React.FC = () => {
           ...item,
           message: item.content,
           user: item.username || item.user,
+          reactions: item.reactions || {},
+          read_by: item.read_by || []
         }));
         setMessages(formatted);
       } else console.error('Failed to fetch messages');
@@ -145,25 +149,71 @@ const Chat: React.FC = () => {
   const connectToRoom = (roomName: string): void => {
     const token = sessionStorage.getItem('accessToken');
     const ws = new WebSocket(`ws://127.0.0.1:8000/ws/chat/${roomName}/?token=${token}`);
-    ws.onopen = () => console.log(`Connected to room: ${roomName}`);
+    ws.onopen = () => {
+      console.log(`Connected to room: ${roomName}`);
+    };
     ws.onmessage = (event: MessageEvent) => {
       const data = JSON.parse(event.data);
-      const parsedTime = new Date(data.timestamp);
-      const validTimestamp = isNaN(parsedTime.getTime()) ? new Date().toISOString() : data.timestamp;
-      const formattedMessage: Message = { ...data, timestamp: validTimestamp };
-      setMessages(prev => [...prev, formattedMessage]);
+      if (data.type === "chat_message") {
+        const parsedTime = new Date(data.timestamp);
+        const validTimestamp = isNaN(parsedTime.getTime())
+          ? new Date().toISOString()
+          : data.timestamp;
+        const formattedMessage: Message = {
+          ...data,
+          timestamp: validTimestamp,
+          reactions: data.reactions || {},
+          read_by: data.read_by || []
+        };
+        // Make sure the message has a valid id before updating state.
+        if (formattedMessage.id) {
+          setMessages(prev => [...prev, formattedMessage]);
+        } else {
+          // If no id yet, trigger a refresh of messages.
+          if (currentRoom) {
+            fetchMessages(currentRoom.id);
+          }
+        }
+      } else if (data.type === "message_read") {
+        setMessages(prevMessages =>
+          prevMessages.map(m => {
+            if (m.id === data.message_id) {
+              const readers = m.read_by ? [...m.read_by] : [];
+              if (!readers.includes(data.reader)) {
+                readers.push(data.reader);
+              }
+              return { ...m, read_by: readers };
+            }
+            return m;
+          })
+        );
+      }
     };
-    ws.onerror = (error: Event) => console.error("WebSocket error:", error);
+    ws.onerror = (error: Event) => {
+      console.error("WebSocket error:", error);
+    };
     wsRef.current = ws;
   };
 
+  // Instead of adding an optimistic message, wait for the backend to emit the valid chat_message event.
+  // Also, refresh messages shortly after sending to update the message id.
   const handleSendMessage = (newMessage: string): void => {
-    if (newMessage.trim() && wsRef.current) {
-      wsRef.current.send(JSON.stringify({ message: newMessage, room: currentRoom?.name }));
+    if (newMessage.trim() && wsRef.current && currentRoom) {
+      wsRef.current.send(
+        JSON.stringify({ message: newMessage, room: currentRoom.name })
+      );
+      // Delay a refresh so that backend has time to assign an id to the new message.
+      setTimeout(() => {
+        fetchMessages(currentRoom.id);
+      }, 500);
     }
   };
 
   const handleReact = async (messageId: number, reaction: string): Promise<void> => {
+    if (!messageId) {
+      console.error("Message id is invalid, cannot add reaction.");
+      return;
+    }
     const token = sessionStorage.getItem('accessToken');
     try {
       const response = await fetch(`${API_BASE_URL}/messages/${messageId}/react/`, {
@@ -174,8 +224,12 @@ const Chat: React.FC = () => {
         },
         body: JSON.stringify({ reaction })
       });
-      if (response.ok && currentRoom) fetchMessages(currentRoom.id);
-      else console.error("Failed to add reaction");
+      if (response.ok && currentRoom) {
+        // Refresh messages to update reaction counts.
+        fetchMessages(currentRoom.id);
+      } else {
+        console.error("Failed to add reaction");
+      }
     } catch (error) {
       console.error("Error adding reaction:", error);
     }
@@ -234,6 +288,24 @@ const Chat: React.FC = () => {
     }
   };
 
+  // Optimistic update for marking a message as read (this does not depend on the message id for reactions).
+  const markMessageAsRead = (msgId: number) => {
+    const currentUser = getCurrentUsername();
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ action: "read", message_id: msgId }));
+      setMessages(prevMessages =>
+        prevMessages.map(m => {
+          if (m.id === msgId && (!m.read_by || !m.read_by.includes(currentUser))) {
+            return { ...m, read_by: m.read_by ? [...m.read_by, currentUser] : [currentUser] };
+          }
+          return m;
+        })
+      );
+    } else {
+      console.warn("WebSocket not open, cannot send read event.");
+    }
+  };
+
   return (
     <div className="container-fluid mt-4">
       <div className="row">
@@ -251,6 +323,7 @@ const Chat: React.FC = () => {
           onSendMessage={handleSendMessage}
           onReact={handleReact}
           joinedRooms={joinedRooms}
+          onMarkAsRead={markMessageAsRead}
         />
         {notification && (
           <Notification
@@ -259,7 +332,6 @@ const Chat: React.FC = () => {
               const targetRoom = joinedRooms.find(r => r.name === notification.room);
               if (targetRoom) {
                 setCurrentRoom(targetRoom);
-                // Delay the scroll to allow messages to load before scrolling.
                 setTimeout(() => {
                   const chatEnd = document.getElementById("chat-end");
                   if (chatEnd) {

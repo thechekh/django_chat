@@ -18,7 +18,10 @@ class RoomSerializer(serializers.ModelSerializer):
 
 class MessageSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source="user.username", read_only=True)
-    reactions = serializers.JSONField(read_only=True)
+    reactions = serializers.JSONField(read_only=True)  # existing field
+    read_by = serializers.SlugRelatedField(
+        many=True, read_only=True, slug_field="username"
+    )  # new field
 
     class Meta:
         model = Message
@@ -30,5 +33,6 @@ class MessageSerializer(serializers.ModelSerializer):
             "content",
             "timestamp",
             "reactions",
+            "read_by",
         ]
-        read_only_fields = ["user", "reactions"]
+        read_only_fields = ["user", "reactions", "read_by"]

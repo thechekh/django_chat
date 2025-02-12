@@ -10,7 +10,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write("Starting user population...")
 
-        user_names = ["Danylo", "John", "James", "Michael", "Mark"]
+        user_names = ["danil1", "danil2", "john", "james", "michael", "mark"]
         users = []
         for uname in user_names:
             email = f"{uname.lower()}@example.com"
@@ -18,7 +18,7 @@ class Command(BaseCommand):
                 username=uname, defaults={"email": email}
             )
             if created:
-                user.set_password("password123")
+                user.set_password("qw123")
                 user.save()
             users.append(user)
         self.stdout.write(f"Created {len(users)} users.")

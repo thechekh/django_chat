@@ -24,7 +24,10 @@ class Message(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
-    reactions = models.JSONField(default=dict, blank=True)  # new field
+    reactions = models.JSONField(default=dict, blank=True)  # existing field
+    read_by = models.ManyToManyField(
+        User, related_name="read_messages", blank=True
+    )  # new field
 
     class Meta:
         ordering = ["timestamp"]
